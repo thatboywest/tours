@@ -16,6 +16,7 @@
   let price = "";
   let description = "";
   let isLoading = writable(false);
+  let isSubmitting = writable(false);
   let notification = writable("");
 
   let categories = [
@@ -37,9 +38,16 @@
     });
   }
 
+  function removeImage(index) {
+    URL.revokeObjectURL(previewUrls[index]);
+    images = images.filter((_, i) => i !== index);
+    previewUrls = previewUrls.filter((_, i) => i !== index);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     isLoading.set(true);
+    isSubmitting.set(true);
     notification.set("");
 
     const formData = new FormData(event.target);
@@ -61,6 +69,7 @@
       notification.set(`Error: ${error.message}`);
     } finally {
       isLoading.set(false);
+      isSubmitting.set(false);
     }
   }
 
@@ -74,6 +83,7 @@
     price = "";
     description = "";
     features = "";
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
     images = [];
     previewUrls = [];
     category = "";
@@ -102,8 +112,7 @@
           <label
             for="title"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Deal Title</label
-          >
+          >Deal Title</label>
           <input
             type="text"
             name="title"
@@ -118,8 +127,7 @@
           <label
             for="destination"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Destination</label
-          >
+          >Destination</label>
           <input
             type="text"
             name="destination"
@@ -133,8 +141,8 @@
         <div>
           <label
             for="category"
-            class="block text-sm font-medium text-gray-700 mb-1">Category</label
-          >
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >Category</label>
           <select
             name="category"
             id="category"
@@ -142,23 +150,24 @@
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
+            <option value="">Select a category</option>
             {#each categories as cat}
               <option value={cat}>{cat}</option>
             {/each}
           </select>
         </div>
-        
+
         {#if category === "Road Trips"}
           <div>
             <label
               for="date"
               class="block text-sm font-medium text-gray-700 mb-1"
-              >Travel Date</label
-            >
+            >Travel Date</label>
             <input
               type="date"
               name="date"
               id="date"
+              bind:value={date}
               required
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
@@ -168,8 +177,7 @@
             <label
               for="guests"
               class="block text-sm font-medium text-gray-700 mb-1"
-              >Number of Guests</label
-            >
+            >Number of Guests</label>
             <input
               type="number"
               name="guests"
@@ -185,8 +193,7 @@
             <label
               for="seatsAvailable"
               class="block text-sm font-medium text-gray-700 mb-1"
-              >Number of Seats Available</label
-            >
+            >Number of Seats Available</label>
             <input
               type="number"
               name="seatsAvailable"
@@ -200,9 +207,10 @@
         {/if}
 
         <div>
-          <label for="days" class="block text-sm font-medium text-gray-700 mb-1"
-            >Duration (Days)</label
-          >
+          <label
+            for="days"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >Duration (Days)</label>
           <input
             type="number"
             name="days"
@@ -217,8 +225,8 @@
         <div>
           <label
             for="price"
-            class="block text-sm font-medium text-gray-700 mb-1">Price</label
-          >
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >Price</label>
           <input
             type="number"
             name="price"
@@ -230,12 +238,11 @@
           />
         </div>
 
-        <div>
+        <div class="col-span-2">
           <label
             for="description"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Description</label
-          >
+          >Description</label>
           <textarea
             name="description"
             id="description"
@@ -250,8 +257,7 @@
           <label
             for="features"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Features (comma-separated)</label
-          >
+          >Features (comma-separated)</label>
           <input
             type="text"
             name="features"
@@ -261,12 +267,12 @@
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
-        
+
         <div class="col-span-2">
           <label
             for="images"
-            class="block text-sm font-medium text-gray-700 mb-1">Images</label
-          >
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >Images</label>
           <div
             class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-orange-500 transition-colors"
           >
@@ -344,10 +350,10 @@
       <div class="flex justify-end mt-8">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={$isSubmitting}
           class="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg transition-colors relative disabled:opacity-70 disabled:cursor-not-allowed hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
         >
-          {#if isSubmitting}
+          {#if $isSubmitting}
             <span class="flex items-center">
               <svg
                 class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

@@ -10,6 +10,7 @@
     if (res.ok) {
       const data = await res.json();
       deals = data.deals; 
+      console.log('Deals:', deals);
     } else {
       console.error('Failed to fetch deals:', res.statusText);
       // Log the actual response
